@@ -161,6 +161,9 @@ $ mise dev
 
 # Run API binary's subcommands (e.g. generate migration files, run pending migrations, etc.)
 $ mise api --help
+
+# To run db migration
+$ mise api gen:migration --db postgres://postgres:postgres@db:5432/identity
 ```
 
 ### **Development**
