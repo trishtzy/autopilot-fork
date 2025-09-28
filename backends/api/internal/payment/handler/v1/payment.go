@@ -78,6 +78,3 @@ func (v *V1) CreatePayment(ctx context.Context, input *CreatePaymentRequest) (*C
 	}
 	return response, nil
 }
-
-	return nil, nil
-}

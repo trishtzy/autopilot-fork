@@ -5,7 +5,6 @@ import (
 	"autopilot/backends/api/internal/payment/model"
 	"autopilot/backends/api/pkg/httpx"
 	"autopilot/backends/api/pkg/testutil"
-	"context"
 	"encoding/json"
 	"net/http"
 	"testing"
@@ -20,7 +19,7 @@ func TestV1_CreatePayment(t *testing.T) {
 	createPaymentPath := BasePath("/payments")
 	api, container, mods := testutil.Container(t)
 
-	ctx := context.Background()
+	ctx := t.Context()
 	auth := identity.NewAuthentication(container, api, mods.Identity.Service)
 	err := AddRoutes(container, api, mods.Payment.Service, auth)
 	require.NoError(t, err)
@@ -174,8 +173,10 @@ func TestV1_CreatePayment(t *testing.T) {
 			assert.Equal(t, tc.expectedStatus, resp.Code)
 
 			if tc.err != nil {
-				httpx.AssertErr(t, tc.err, resp.Body)
-				return
+				var errResp httpx.Error
+				err := json.NewDecoder(resp.Body).Decode(&errResp)
+				require.NoError(t, err)
+				assert.Equal(t, tc.err.(httpx.ErrorCode), errResp.Code)
 			}
 
 			if tc.checkResponse {

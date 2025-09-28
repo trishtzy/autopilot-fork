@@ -72,7 +72,7 @@ func (s *Payment) Create(ctx context.Context, transaction *model.Payment) (*mode
 // GetByID gets a transaction by transaction ID
 func (s *Payment) Get(ctx context.Context, id string) (*model.Payment, error) {
 	query := `
-		SELECT
+		SELECT id, created_at, updated_at
 		FROM
 			payments
 		WHERE
@@ -93,4 +93,58 @@ func (s *Payment) Get(ctx context.Context, id string) (*model.Payment, error) {
 	}
 
 	return payment, nil
+}
+
+func (s *Payment) GetPayments(ctx context.Context, merchantID string, limit int, offset int) ([]*model.Payment, error) {
+	query := `
+		SELECT id,
+		amount,
+		currency,
+		status,
+		provider,
+		method,
+		description,
+		error_message,
+		created_at,
+		updated_at,
+		completed_at
+		FROM
+			payments
+		WHERE
+			merchant_id = $1
+		ORDER BY created_at DESC
+		LIMIT $2
+		OFFSET $3
+	}`
+
+	payments := []*model.Payment{}
+	rows, err := s.QueryContext(ctx, query, merchantID, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		payment := &model.Payment{}
+		err := rows.Scan(
+			&payment.ID,
+			&payment.Amount,
+			&payment.Currency,
+			&payment.Status,
+			&payment.Provider,
+			&payment.Method,
+			&payment.Description,
+			&payment.ErrorMessage,
+			&payment.CreatedAt,
+			&payment.UpdatedAt,
+			&payment.CompletedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		payments = append(payments, payment)
+	}
+
+	return payments, rows.Err()
 }
